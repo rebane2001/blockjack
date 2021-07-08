@@ -17,6 +17,12 @@ discord = {
     }
 }
 
+# Enable or disable logging of playlist and videos API data
+logging = {
+    "playlists": True,
+    "videos": True,
+}
+
 # By default, paths are relative to where you run the script from. Absolute paths can be used if desired.
 paths = {
     # Lists of video ids you wish to avoid downloading, can have multiple files
@@ -25,6 +31,8 @@ paths = {
     "download": "download.txt",
     # Dumps playlist data just in case
     "playlist_log": "playlist_log.jsonl",
+    # Dumps video data just in case
+    "video_log": "video_log.jsonl",
     # Additional useful data about user submissions will be logged here
     "submissions_log": "submissions.jsonl",
 }

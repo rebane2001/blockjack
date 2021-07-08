@@ -217,11 +217,20 @@ async def on_message(message):
             if linktype == 1:
                 video_ids = extractVids(message.content)
                 videos = get_all_videos_from_ids(video_ids)
+                if config.logging['videos']:
+                    with open(config.paths["video_log"], "a", encoding="UTF-8") as f:
+                        for video in videos:
+                            f.write(f"{json.dumps(video)}\n")
             elif linktype == 2:
                 playlist_id = extractPlaylist(message.content)
                 videos = get_all_videos_from_playlist(playlist_id)
-                with open(config.paths["playlist_log"], "a", encoding="UTF-8") as f:
-                    f.write(f"{json.dumps(videos)}\n")
+                if config.logging['playlists']:
+                    with open(config.paths["playlist_log"], "a", encoding="UTF-8") as f:
+                        f.write(f"{json.dumps(videos)}\n")
+                if config.logging['videos']:
+                    with open(config.paths["video_log"], "a", encoding="UTF-8") as f:
+                        for video in videos:
+                            f.write(f"{json.dumps(video)}\n")
             orig_len = len(videos)
             print(videos)
             print(f"Got {len(videos)} videos")
