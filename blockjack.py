@@ -16,11 +16,15 @@ def getLinkType(link):
         return 0
     if re.search(r'/watch\?v=([A-Za-z0-9_\-]{11})', link):
         return 1
+    if re.search(r'/watch\?.*?&v=([A-Za-z0-9_\-]{11})', link):
+        return 1
     if re.search(r'youtu.be/([A-Za-z0-9_\-]{11})', link):
         return 1
     if re.search(r'/shorts/([A-Za-z0-9_\-]{11})', link):
         return 1
     if re.search(r'/playlist\?list=([A-Za-z0-9_\-]{16,64})', link):
+        return 2
+    if re.search(r'/playlist\?.*&list=([A-Za-z0-9_\-]{16,64})', link):
         return 2
     return -1
 
@@ -28,11 +32,17 @@ def extractPlaylist(link):
     vidmatch = re.search(r'/playlist\?list=([A-Za-z0-9_\-]{16,64})', link)
     if vidmatch:
         return vidmatch.group(1)
+    vidmatch = re.search(r'/playlist\?.*?&list=([A-Za-z0-9_\-]{16,64})', link)
+    if vidmatch:
+        return vidmatch.group(1)
     return "ERROR EXTRACTING VID: " + link
 
 def extractVids(link):
     matches = []
     vidmatch = re.findall(r'/watch\?v=([A-Za-z0-9_\-]{11})', link)
+    if vidmatch:
+        matches.extend(vidmatch)
+    vidmatch = re.findall(r'&v=([A-Za-z0-9_\-]{11})', link)
     if vidmatch:
         matches.extend(vidmatch)
     vidmatch = re.findall(r'youtu.be/([A-Za-z0-9_\-]{11})', link)
