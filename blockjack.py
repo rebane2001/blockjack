@@ -22,6 +22,8 @@ def getLinkType(link):
         return 1
     if re.search(r'/shorts/([A-Za-z0-9_\-]{11})', link):
         return 1
+    if re.search(r'/embed/([A-Za-z0-9_\-]{11})', link):
+        return 1
     if re.search(r'/playlist\?list=([A-Za-z0-9_\-]{16,64})', link):
         return 2
     if re.search(r'/playlist\?.*&list=([A-Za-z0-9_\-]{16,64})', link):
@@ -49,6 +51,9 @@ def extractVids(link):
     if vidmatch:
         matches.extend(vidmatch)
     vidmatch = re.findall(r'/shorts/([A-Za-z0-9_\-]{11})', link)
+    if vidmatch:
+        matches.extend(vidmatch)
+    vidmatch = re.findall(r'/embed/([A-Za-z0-9_\-]{11})', link)
     if vidmatch:
         matches.extend(vidmatch)
     return matches
@@ -209,7 +214,7 @@ async def on_message(message):
         if "logout" in message.content.lower():
             message.reply("bruh")
             await message.add_reaction('🤨')
-        if not ("youtube.com" in message.content or "youtu.be" in message.content):
+        if not ("youtube." in message.content or "youtu.be" in message.content):
             return
         unlisted_only = str(message.channel.id) in config.filtering['unlisted_only']
         pre2017_only = str(message.channel.id) in config.filtering['pre2017_only']
