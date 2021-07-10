@@ -160,7 +160,7 @@ def log_message(message,logtype):
         "userid": message.author.id,
         "message": message.content,
         "message_id": message.id,
-        "created_at": message.created_at,
+        "created_at": message.created_at.timestamp(),
         "timestamp": time.time(),
     }
     with open(config.paths[logtype], "a", encoding="UTF-8") as f:
@@ -217,7 +217,7 @@ async def processVideoList(message, video_ids_orig):
             "message": message.content,
             "new_ids": new_ids,
             "message_id": message.id,
-            "created_at": message.created_at,
+            "created_at": message.created_at.timestamp(),
             "timestamp": time.time(),
         }
         with open(config.paths["submissions_log"], "a", encoding="UTF-8") as f:
