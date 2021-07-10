@@ -8,6 +8,12 @@ discord = {
     # The channel IDs for Discord channels people will be submitting videos in
     "submit_channels": ["123456789012345678"],
     "log_submissions": True,
+    # Log all messages
+    "log_all": False,
+    # Log all missed messages (messages, that were not processed)
+    "log_missed": False,
+    # Allow multiple playlists in one message
+    "multiple_playlists": False,
     # Emojis are either literally the emoji (⏳) or the square bracket thing (<:blackjack:852661559829856276>)
     "emoji": {
         "already_added": "✅",
@@ -35,6 +41,10 @@ paths = {
     "video_log": "video_log.jsonl",
     # Additional useful data about user submissions will be logged here
     "submissions_log": "submissions.jsonl",
+    # Log all processed Discord messages
+    "all_messages_log": "all_messages.jsonl",
+    # Log all failed Discord messages
+    "missed_messages_log": "missed_messages.jsonl",
 }
 
 # Don't give these out to anyone, they're called secrets for a reason

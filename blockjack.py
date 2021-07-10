@@ -39,6 +39,16 @@ def extractPlaylist(link):
         return vidmatch.group(1)
     return "ERROR EXTRACTING VID: " + link
 
+def extractPlaylists(link):
+    matches = []
+    vidmatch = re.findall(r'/playlist\?list=([A-Za-z0-9_\-]{16,64})', link)
+    if vidmatch:
+        matches.extend(vidmatch)
+    vidmatch = re.findall(r'/playlist\?.*?&list=([A-Za-z0-9_\-]{16,64})', link)
+    if vidmatch:
+        matches.extend(vidmatch)
+    return matches
+
 def extractVids(link):
     matches = []
     vidmatch = re.findall(r'/watch\?v=([A-Za-z0-9_\-]{11})', link)
@@ -144,6 +154,18 @@ def get_all_videos_from_ids(video_ids):
 def parse_date_format(date_str):
     return datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
 
+def log_message(message,logtype):
+    event = {
+        "user": str(message.author),
+        "userid": message.author.id,
+        "message": message.content,
+        "message_id": message.id,
+        "created_at": message.created_at,
+        "timestamp": time.time(),
+    }
+    with open(config.paths[logtype], "a", encoding="UTF-8") as f:
+        f.write(f"{json.dumps(event)}\n")
+
 async def splitReply(message, reply):
     remaining = reply
     while len(remaining) > 0:
@@ -194,6 +216,8 @@ async def processVideoList(message, video_ids_orig):
             "userid": message.author.id,
             "message": message.content,
             "new_ids": new_ids,
+            "message_id": message.id,
+            "created_at": message.created_at,
             "timestamp": time.time(),
         }
         with open(config.paths["submissions_log"], "a", encoding="UTF-8") as f:
@@ -211,10 +235,14 @@ async def on_message(message):
 
     # Submit channel message received
     if str(message.channel.id) in config.discord['submit_channels']: 
+        if config.discord['log_all']:
+            log_message(message,"all_messages_log")
         if "logout" in message.content.lower():
-            message.reply("bruh")
+            await message.reply("bruh")
             await message.add_reaction('🤨')
         if not ("youtube." in message.content or "youtu.be" in message.content):
+            if config.discord['log_missed']:
+                log_message(message,"missed_messages_log")
             return
         unlisted_only = str(message.channel.id) in config.filtering['unlisted_only']
         pre2017_only = str(message.channel.id) in config.filtering['pre2017_only']
@@ -224,10 +252,14 @@ async def on_message(message):
             await message.clear_reaction(getEmoji('wait'))
             await message.add_reaction(getEmoji('fail'))
             await message.reply("That doesn't seem like a proper YouTube link.")
+            if config.discord['log_missed']:
+                log_message(message,"missed_messages_log")
         elif linktype == 0:
             await message.clear_reaction(getEmoji('wait'))
             await message.add_reaction(getEmoji('fail'))
             await message.reply("Adding channels is not enabled.")
+            if config.discord['log_missed']:
+                log_message(message,"missed_messages_log")
         elif linktype > 0:
             if linktype == 1:
                 video_ids = extractVids(message.content)
@@ -237,17 +269,24 @@ async def on_message(message):
                         for video in videos:
                             f.write(f"{json.dumps(video)}\n")
             elif linktype == 2:
-                playlist_id = extractPlaylist(message.content)
-                videos = get_all_videos_from_playlist(playlist_id)
-                if config.logging['playlists']:
-                    with open(config.paths["playlist_log"], "a", encoding="UTF-8") as f:
-                        f.write(f"{json.dumps(videos)}\n")
+                playlist_ids = extractPlaylists(message.content)
+                if len(playlist_ids) > 1 and not config.discord['multiple_playlists']:
+                    playlist_ids = [playlist_ids[0]]
+                    await message.reply("Warning! Only one playlist per message will be processed.")
+                    if config.discord['log_missed']:
+                        log_message(message,"missed_messages_log")
+                videos = []
+                for playlist_id in playlist_ids:
+                    playlist_videos = get_all_videos_from_playlist(playlist_id)
+                    videos += playlist_videos
+                    if config.logging['playlists']:
+                        with open(config.paths["playlist_log"], "a", encoding="UTF-8") as f:
+                            f.write(f"{json.dumps(playlist_videos)}\n")
                 if config.logging['videos']:
                     with open(config.paths["video_log"], "a", encoding="UTF-8") as f:
                         for video in videos:
                             f.write(f"{json.dumps(video)}\n")
             orig_len = len(videos)
-            print(videos)
             print(f"Got {len(videos)} videos")
             if unlisted_only or pre2017_only:
                 critical_datetime = datetime(year=2017, month=1, day=2, tzinfo=timezone.utc)
